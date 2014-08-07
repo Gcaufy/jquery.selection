@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-cn" class="no-js">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="language" content="en" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+
+
+        <link rel="shortcut icon" href="images/favicon.ico" />
+
+		<link rel="stylesheet" type="text/css" href="css/jquery.selection.css"/>
+
+        <script type="text/javascript" src="jquery.js"></script>
+        <script type="text/javascript" src="jquery.selection.js"></script>
+        <script type="text/javascript" src="jquery.selection.testData.js"></script>
+
+        <title>jQuery Selection Demo</title>
+        <style>
+body {
+    font-size: 12px;
+}   
+h3 {
+    font-size: 27px;
+    margin-top: 50px
+}
+
+pre {
+    background-color: #e4e4e4;
+    border: 1px solid #bababa;
+    color: #000000;
+    display: block;
+    display: none;overflow-x: scroll;
+    width: 600px;
+}
+</style>
+	</head>
+
+	<body>
+        <h3># Simple Demo</h3> 
+        <div id="nav-container" style="width: 940px;"></div>
+        <div id="result"></div>
+
+
+<script>
+$(function () {
+$('#nav-container').selection({
+        dataSource: selectionData1,
+        onSelected: function (category, item, eventTarget) {
+            var key, i, str = '';
+            if (category.length === undefined)
+                $('#result').html(category.title + '-' + item.title);
+            else {
+                for(key in category) {
+                    str += category[key].title + '-';
+                    for(i in category[key].items) {
+                        str += category[key].items[i].title + ','
+                    }
+                    str += '<br />';
+                }
+                $('#result').html(str);
+            }
+        }
+    }).init();
+});
+    
+</script>
+
+
+        <script>
+        $('.view-source').click(function () {
+            $(this).next().toggle();
+        })
+        </script>
+    </body>
+</html>
+

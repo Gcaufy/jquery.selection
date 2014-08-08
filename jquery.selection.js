@@ -1,12 +1,12 @@
 /*!
- * Note: Using iframe to do a fake ajax upload
+ * Note: category selection plugin
  *
  * jQuery Selection Library v1.0.1
  * http://www.madcoder.cn/
  *
  * Copyright 2014, Gcaufy
  *
- * Date Fri Aug 01 2014 15:34:13 GMT+0800
+ * Date Fri Aug 08 2014 11:02:25 GMT+0800
  */
 (function ($){
 	var selection = function (container, i, c) {

@@ -95,6 +95,51 @@ var selectionData1 = {
 					{value: '8', title: '针织衫/毛衣'}
 				]
 			},
+			category: {
+				value: 'fitler', 
+				title: '筛选条件', 
+				items: [
+					{
+						value: '1', 
+						title: '区间价格', 
+						items: [
+							{value: '1', title: '0-100元'},
+							{value: '2', title: '100-200元'},
+							{value: '3', title: '200-300'},
+							{value: '4', title: '300-500元'},
+							{value: '5', title: '500元以上'}
+						]
+					},
+					{
+						value: '2', 
+						title: '风格', 
+						items: [
+							{value: '1', title: '休闲'},
+							{value: '2', title: '韩版'},
+							{value: '3', title: '英伦'},
+							{value: '4', title: '简约'},
+							{value: '5', title: '运动'},
+							{value: '6', title: '民族风'},
+							{value: '7', title: '复古'},
+							{value: '8', title: '欧美'},
+							{value: '9', title: '青春潮流'},
+							{value: '10', title: '日系'},
+							{value: '11', title: '商务'}
+						]
+					},
+					{
+						value: '3', 
+						title: '好店推荐', 
+						items: [
+							{value: '1', title: '黄钻买家最爱买'},
+							{value: '2', title: '回头客最多'},
+							{value: '3', title: '发货速度最快'},
+							{value: '4', title: '描述评分最高'},
+							{value: '5', title: '服务态度最好'}
+						]
+					}
+				]
+			},
 		}
 	]
 }

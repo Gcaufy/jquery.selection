@@ -23,8 +23,9 @@
 	selection.fn = selection.prototype = {
 		init: function () {
 			var container = this._container, group = null, self = this, c = self.config, data = c.dataSource.data,
-				key = null, i = 0, p = 0, lenp = 0, tmp = null, len = data.length, 
-				category = null, item = null, itemp = null, more = null, multiple = null, topbar = '',
+				key = null, i = 0, p = 0, lenp = 0, q = 0, lenq = 0, tmp = null, len = data.length, 
+				category = null, item = null, itemp = null, more = null, multiple = null, topbar = '', 
+				hasChildItem = false, itemChildren = null, ul, li = null,
 				multipleButtons = null, multipleConfirm = null, multipleCancel = null;
 			if (c.breadcrumb !== false) {
 				topbar = $('<div class="nav-topbar nav-category-group clearfix"><a class="nav-switch" href="javascript:void(0);" title="' + c.navShow.foldText + '"><i class="icon icon-arrow-up-gray" trace="navHideButton"></i></a><div class="nav-topbar-content"><ul><li class="has-arrow">' + c.breadcrumb.root.title + '</li><li class="nav-arrow"><span class="nav-topbar-arror icon icon-arrow-right-gray"></span></li></ul></div><div class="nav-category-panel"></div></div>');
@@ -93,33 +94,58 @@
 				tmp = item.find('ul');
 				for(p = 0; p < lenp; p++) {
 					itemp = category.items[p];
-					tmp.append('<li class=""><a data-cateogry="' + i + '" data-item="' + p + '" class="nav-category-item' +
-					(itemp.selected ? ' selected' : '') +
-					 '" title="' + itemp.title + '" data-value="' + itemp.value + '" data-traceclick=""><div class="icon icon-btn-check-small icon-chk-unchecked2"></div>' + itemp.title + '</a></li>');
+					hasChildItem = (itemp.items && itemp.items.length > 0);
+					li = $('<li class="' + (hasChildItem ? 'nav-parent-item' : '') + '"></li>');
+
+					if (hasChildItem) {
+						li.append('<i data-cateogry="' + i + '" data-item="' + p + '" class="nav-category-item' +
+							(itemp.selected ? ' selected' : '') + 
+							'" title="' + itemp.title + '" data-value="' + itemp.value + '" data-traceclick="">' + itemp.title + '</i>'
+						);
+						tmp.append(li);
+						itemChildren = itemp.items;
+						lenq = itemChildren.length;
+						ul = $('<div class="nav-children-panel"><ul></ul></div>');
+						li.append(ul);
+						ul = ul.find('ul');
+						for(q = 0; q < lenq; q++) {
+							ul.append('<li><a data-cateogry="' + i + '" data-item="' + p + '" data-child="' + itemChildren[q].value + '" class="' + 
+								(itemChildren[q].selected ? 'selected' : '') + '" >' + itemChildren[q].title + '</a></li>');
+						}
+					} else {
+						li.append('<a data-cateogry="' + i + '" data-item="' + p + '" class="nav-category-item' +
+							(itemp.selected ? ' selected' : '') + 
+							'" title="' + itemp.title + '" data-value="' + itemp.value + '" data-traceclick=""><div class="icon icon-btn-check-small icon-chk-unchecked2"></div>' + itemp.title + '</a>'
+						);
+						tmp.append(li);
+					}
 				}
 				tmp.find('a').click(function () {
 					var tmpi = $(this).attr('data-cateogry'), 
 						tmpp = $(this).attr('data-item'), 
-						categoryDom = null,
-						category = data[tmpi].category, 
-						categoryIndex = 0,
-						itemIndex = 0,
-						item = category.items[tmpp];
+						tmpq = $(this).attr('data-child'),
+						hasChild = !!$(this).attr('data-child'),
+
+						categoryDom = $(this).parents('.nav-category'),
+						categoryIndex = container.find('.nav-category').index(categoryDom),
+						itemIndex = hasChild ? $(this).parents('.nav-parent-item').index() : categoryDom.find('a.nav-category-item').index(this),
+						childIndex = hasChild ? $(this).parent().index() : false,
+
+						category = data[categoryIndex].category, 
+						item = category.items[itemIndex],
+						child = (childIndex !== false) ? item.items[childIndex] : null;
+
 					if (typeof(c.onClick) === 'function') {
-						if (c.onClick.call(self, category, item, this) === false)
+						if (c.onClick.call(self, category, item, child, this) === false)
 							return false;
 					}
-					categoryDom = $(this).parents('.nav-category');
-					categoryIndex = container.find('.nav-category').index(categoryDom);
-					itemIndex = categoryDom.find('a.nav-category-item').index(this);
 					if (self.state.multi) {
-						self.selecteItemsByIndex(categoryIndex, itemIndex, true);
-
+						self.selecteItemsByIndex(categoryIndex, itemIndex, childIndex, true);
 					} else {
 						self.clearSelected(category.value);
-						self.selecteItemsByIndex(categoryIndex, itemIndex);
+						self.selecteItemsByIndex(categoryIndex, itemIndex, childIndex, childIndex);
 						if (typeof(c.onSelected) === 'function') {
-							if (c.onSelected.call(self, category, item, this) === false)
+							if (c.onSelected.call(self, category, item, child, this) === false)
 								return false;
 						}
 						self.updateBreadCrumb();
@@ -207,8 +233,8 @@
 			}*/
 			return this;
 		},
-		selecteItemsByIndex: function (categoryIndex, itemIndex, toggle) {
-			var selectedCategory = null, selectedItem = null, container = this._container, 
+		selecteItemsByIndex: function (categoryIndex, itemIndex, childIndex, toggle) {
+			var selectedCategory = null, selectedItem = null, selectedChild, container = this._container, 
 				items = (typeof(itemIndex) === 'string') ? itemIndex.split(',') : [itemIndex],
 				key = null;
 			selectedCategory = container.find('.nav-category:eq(' + categoryIndex + ')').addClass('selected');
@@ -220,6 +246,8 @@
 				} else {
 					selectedItem.addClass('selected');
 				}
+				if (childIndex !== false)
+					selectedChild = selectedCategory.find('.nav-children-panel').eq(itemIndex).find('li').eq(childIndex).find('a').addClass('selected');
 			}
 			if (toggle) {
 				this.checkStatus(selectedCategory);
@@ -230,9 +258,9 @@
 			category = category ? category : this._container.find('.nav-category');
 			category.each(function () {
 				selectedCategory = $(this);
-				if (selectedCategory.find('ul a.nav-category-item.selected').length === 0) {
+				if (selectedCategory.find('ul .nav-category-item.selected').length === 0) {
 					selectedCategory.removeClass('selected').removeClass('half-selected').removeClass('full-selected');
-				} else if (selectedCategory.find('ul a.nav-category-item.selected').length === selectedCategory.find('ul a.nav-category-item').length) {
+				} else if (selectedCategory.find('ul .nav-category-item.selected').length === selectedCategory.find('ul .nav-category-item').length) {
 					selectedCategory.addClass('selected').removeClass('half-selected').addClass('full-selected');
 				} else {
 					selectedCategory.addClass('selected').addClass('half-selected').removeClass('full-selected');
@@ -248,11 +276,11 @@
 			target.find('.selected').removeClass('selected');
 			return this;
 		},
-		updateBreadCrumb: function (category, item) {
+		updateBreadCrumb: function (category, item, child) {
 			var self = this, c = this.config, container = this._container, li = '', 
 				i = 0, len = 0, p = 0, lenp = 0,
 				obj = {}, tmp = null,
-				categoryValue, itemValue, categoryTitle = '', itemTitle = '', hasArrow = false;
+				categoryValue, itemValue, categoryTitle = '', itemTitle = '', childTitle = '', childValue = '', hasArrow = false;
 			if (category === undefined)
 				category = self.getSelected();
 			
@@ -273,6 +301,10 @@
  					lenp = category[i].items.length;
  					itemTitle = '';
  					itemValue = '';
+ 					if (category[i].items.length === 0 && category[i].items[0].child) {
+ 						childValue = category[i].items[0].child.value;
+ 						childTitle = category[i].items[0].child.title;
+ 					}
  					for (p = 0; p < lenp; p++) {
  						itemTitle += category[i].items[p].title + ', ';
  						itemValue += category[i].items[p].value + ',';
@@ -281,6 +313,7 @@
  						itemTitle = itemTitle.substr(0, itemTitle.length - 2);
  						itemValue = itemValue.substr(0, itemValue.length - 1);
  					}
+ 					itemTitle += '-' + childTitle;
 					this._addlist(categoryValue, categoryTitle, itemValue, itemTitle, hasArrow, 1);
  				}
 				for (tmp in obj) {
@@ -299,16 +332,20 @@
 			return this;
 		},
 		getSelected: function () {
-			var container = this._container, self = this, selected = [], data = this.config.dataSource.data, 
-				selectedCategory = null, category = null, item = null, tmp = [], parent = null;
+			var container = this._container, self = this, selected = [], data = this.config.dataSource.data, child
+				selectedCategory = null, category = null, item = null, tmp = [], parent = null, tmpq = null;
 
 			container.find('.nav-category.selected').each(function (i) {
 				parent = this;
 				category = data[container.find('.nav-category').index(this)].category
 				selectedCategory = $.extend(true, {}, category);
 				tmp = [];
-				$(this).find('ul a.nav-category-item.selected').each(function (p) {
-					tmp.push(category.items[$(parent).find('ul a.nav-category-item').index(this)]);
+				$(this).find('ul .nav-category-item.selected').each(function (p) {
+					item = category.items[$(parent).find('ul .nav-category-item').index(this)];
+					if (item.items && item.items.length > 0) {
+						item.child = item.items[$(this).parent().find('.nav-children-panel li a.selected').eq(0).parent().index()];
+					}
+					tmp.push(item);
 				});
 				selectedCategory.items = tmp;
 				selected.push(selectedCategory);
